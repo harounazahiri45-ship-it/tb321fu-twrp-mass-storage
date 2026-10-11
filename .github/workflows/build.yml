@@ -1,0 +1,38 @@
+name: TWRP TB321FU Mass Storage
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Install repo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y repo
+      - name: Sync TWRP
+        run: |
+          repo init --depth=1 -u https://github.com/TWRP-Test/platform_manifest_twrp_aosp.git -b twrp-16.0
+          repo sync -c --no-tags --optimized-fetch -j2
+      - name: Add kirby tree and fixes
+        run: |
+          git clone --depth=1 -b twrp-16-mod https://github.com/morannlx/android_device_TB321FU_recovery.git device/lenovo/kirby
+          sed -i '/TW_EXCLUDE_DEFAULT_USB_INIT/a TARGET_USE_CUSTOM_LUN_FILE_PATH := /config/usb_gadget/g1/functions/mass_storage.0/lun.%d/file\\nTW_ENABLE_ALL_PARTITION_TOOLS := true' device/lenovo/kirby/BoardConfig.mk
+          python3 - <<'PY'
+          p='device/lenovo/kirby/recovery/root/init.recovery.usb.rc'
+          s=open(p).read()
+          marker='on property:sys.usb.ffs.ready=1 && property:sys.usb.config=mtp,adb'
+          block='on property:sys.usb.config=mass_storage && property:sys.usb.configfs=1\\n    write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mass_storage"\\n    symlink /config/usb_gadget/g1/functions/mass_storage.0 /config/usb_gadget/g1/configs/b.1/f1\\n    write /config/usb_gadget/g1/UDC \${sys.usb.controller}\\n    setprop sys.usb.state \${sys.usb.config}\\n\\n'
+          open(p,'w').write(s.replace(marker,block+marker))
+          PY
+      - name: Build recovery
+        run: |
+          source build/envsetup.sh
+          lunch twrp_kirby
+          m recoveryimage
+      - name: Upload recovery
+        uses: actions/upload-artifact@v4
+        with:
+          name: TWRP-kirby-mass-storage
+          path: out/target/product/kirby/recovery.img
