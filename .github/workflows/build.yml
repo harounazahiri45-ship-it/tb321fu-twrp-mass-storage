@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 360
     permissions:
       contents: write
@@ -24,7 +24,7 @@ jobs:
         run: |
           git clone --depth=1 -b twrp-16-mod https://github.com/morannlx/android_device_TB321FU_recovery.git device/lenovo/kirby
           sed -i '/TW_EXCLUDE_DEFAULT_USB_INIT/a TARGET_USE_CUSTOM_LUN_FILE_PATH := /config/usb_gadget/g1/functions/mass_storage.0/lun.%d/file\nTW_ENABLE_ALL_PARTITION_TOOLS := true' device/lenovo/kirby/BoardConfig.mk
-          sed -i '/on property:sys.usb.ffs.ready=1 && property:sys.usb.config=mtp,adb/i on property:sys.usb.config=mass_storage && property:sys.usb.configfs=1\n    write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mass_storage"\n    rm /config/usb_gadget/g1/configs/b.1/f1\n    rm /config/usb_gadget/g1/configs/b.1/f2\n    rm /config/usb_gadget/g1/configs/b.1/f3\n    symlink /config/usb_gadget/g1/functions/mass_storage.0 /config/usb_gadget/g1/configs/b.1/f1\n    write /config/usb_gadget/g1/UDC ${sys.usb.controller}\n    setprop sys.usb.state ${sys.usb.config}\n' device/lenovo/kirby/recovery/root/init.recovery.usb.rc
+          sed -i '/on property:sys.usb.ffs.ready=1 && property:sys.usb.config=mtp,adb/i on property:sys.usb.config=mass_storage && property:sys.usb.configfs=1\n    write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mass_storage"\n    rm /config/usb_gadget/g1/configs/b.1/f1\n    rm /config/usb_gadget/g1/configs/b.1/f2\n    rm /config/usb_gadget/g1/configs/b.1/f3\n    symlink /config/usb_gadget/g1/functions/mass_storage.0 /config/usb_gadget/g1/configs/b.1/f1\n    write /config/usb_gadget/g1/UDC \${sys.usb.controller}\n    setprop sys.usb.state \${sys.usb.config}\n' device/lenovo/kirby/recovery/root/init.recovery.usb.rc
       - name: Build recovery
         run: |
           source build/envsetup.sh
