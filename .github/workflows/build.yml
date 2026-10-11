@@ -27,6 +27,8 @@ jobs:
           sed -i '/on property:sys.usb.ffs.ready=1 && property:sys.usb.config=mtp,adb/i on property:sys.usb.config=mass_storage && property:sys.usb.configfs=1\n    write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mass_storage"\n    rm /config/usb_gadget/g1/configs/b.1/f1\n    rm /config/usb_gadget/g1/configs/b.1/f2\n    rm /config/usb_gadget/g1/configs/b.1/f3\n    symlink /config/usb_gadget/g1/functions/mass_storage.0 /config/usb_gadget/g1/configs/b.1/f1\n    write /config/usb_gadget/g1/UDC \${sys.usb.controller}\n    setprop sys.usb.state \${sys.usb.config}\n' device/lenovo/kirby/recovery/root/init.recovery.usb.rc
       - name: Build recovery
         run: |
+          export NINJA_ARGS="-j1"
+          export SOONG_NUM_OF_THREADS=1
           source build/envsetup.sh
           lunch twrp_kirby
           m -j1 recoveryimage
@@ -35,3 +37,4 @@ jobs:
         with:
           name: TWRP-kirby-mass-storage
           path: out/target/product/kirby/recovery.img
+          if-no-files-found: error
